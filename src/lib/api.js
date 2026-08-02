@@ -100,7 +100,7 @@ export function mapOrder(row) {
 
 export function mapReview(row) {
   if (!row) return null;
-  const p = row.profiles;
+  const p = row.users;
   return {
     id: row.id,
     userId: row.user_id,
@@ -402,7 +402,7 @@ export async function updatePaymentStatus(paymentId, status) {
 export async function getProductReviews(productId) {
   const { data, error } = await supabase
     .from('reviews')
-    .select('*, profiles(first_name, last_name, email)')
+    .select('*, users(first_name, last_name, email)')
     .eq('product_id', productId)
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
@@ -412,7 +412,7 @@ export async function getProductReviews(productId) {
 export async function getAllReviews() {
   const { data, error } = await supabase
     .from('reviews')
-    .select('*, profiles(first_name, last_name, email), products(name)')
+    .select('*, users(first_name, last_name, email), products(name)')
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
   return data.map(mapReview);
@@ -422,7 +422,7 @@ export async function createReview({ userId, productId, rating, comment }) {
   const { data, error } = await supabase
     .from('reviews')
     .insert({ user_id: userId, product_id: productId, rating, comment })
-    .select('*, profiles(first_name, last_name, email)')
+    .select('*, users(first_name, last_name, email)')
     .single();
   if (error) throw new Error(error.message);
   return mapReview(data);
@@ -441,7 +441,7 @@ export async function deleteReview(reviewId) {
 // ── CLIENTS (admin) ──────────────────────────────────────────
 export async function getCustomers() {
   const { data, error } = await supabase
-    .from('profiles')
+    .from('users')
     .select('*')
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
@@ -449,20 +449,20 @@ export async function getCustomers() {
 }
 
 export async function setCustomerRole(userId, role) {
-  const { error } = await supabase.from('profiles').update({ role }).eq('id', userId);
+  const { error } = await supabase.from('users').update({ role }).eq('id', userId);
   if (error) throw new Error(error.message);
 }
 
 export async function setCustomerActive(userId, isActive) {
   const { error } = await supabase
-    .from('profiles')
+    .from('users')
     .update({ is_active: isActive })
     .eq('id', userId);
   if (error) throw new Error(error.message);
 }
 
 export async function deleteCustomer(userId) {
-  const { error } = await supabase.from('profiles').delete().eq('id', userId);
+  const { error } = await supabase.from('users').delete().eq('id', userId);
   if (error) throw new Error(error.message);
 }
 
