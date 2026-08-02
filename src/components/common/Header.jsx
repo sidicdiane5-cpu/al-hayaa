@@ -125,6 +125,11 @@ export default function Header() {
             </div>
             <div className={s.topBarRight}>
               <Link to="/suivi-commande">Suivre ma commande</Link>
+              {!isAuthenticated ? (
+                <Link to="/login" style={{ color: 'var(--gold)', fontWeight: 500 }}>Connexion</Link>
+              ) : (
+                <Link to="/compte" style={{ color: 'var(--gold)', fontWeight: 500 }}>Mon compte</Link>
+              )}
               <Link to="/faq">FAQ</Link>
             </div>
           </div>
@@ -291,8 +296,8 @@ export default function Header() {
                         </>
                       ) : (
                         <>
-                          <Link to="/connexion" className={s.megaMenuLink} onClick={() => setUserMenuOpen(false)}>Se connecter</Link>
-                          <Link to="/inscription" className={s.megaMenuLink} onClick={() => setUserMenuOpen(false)}>Créer un compte</Link>
+                          <Link to="/login" className={s.megaMenuLink} onClick={() => setUserMenuOpen(false)}>Se connecter</Link>
+                          <Link to="/register" className={s.megaMenuLink} onClick={() => setUserMenuOpen(false)}>Créer un compte</Link>
                         </>
                       )}
                     </motion.div>
@@ -382,10 +387,10 @@ export default function Header() {
                   </>
                 ) : (
                   <>
-                    <Link to="/connexion" className={s.mobileNavLink} onClick={() => setMobileOpen(false)}>
+                    <Link to="/login" className={s.mobileNavLink} onClick={() => setMobileOpen(false)}>
                       <User size={16} /> Se connecter
                     </Link>
-                    <Link to="/inscription" className={s.mobileNavLink} onClick={() => setMobileOpen(false)}>
+                    <Link to="/register" className={s.mobileNavLink} onClick={() => setMobileOpen(false)}>
                       Créer un compte
                     </Link>
                   </>
