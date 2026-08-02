@@ -1,0 +1,385 @@
+.loginPage {
+  min-height: 100vh;
+  display: flex;
+  width: 100%;
+}
+
+.leftSide {
+  display: none;
+  width: 50%;
+  background: var(--gradient-navy);
+  position: relative;
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .leftSide {
+    display: flex;
+  }
+}
+
+.decorativeElements {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.orb1 {
+  position: absolute;
+  top: 80px;
+  left: 80px;
+  width: 256px;
+  height: 256px;
+  background: var(--gold);
+  border-radius: 50%;
+  opacity: 0.1;
+  filter: blur(60px);
+}
+
+.orb2 {
+  position: absolute;
+  bottom: 80px;
+  right: 80px;
+  width: 384px;
+  height: 384px;
+  background: var(--gold);
+  border-radius: 50%;
+  opacity: 0.1;
+  filter: blur(60px);
+}
+
+.circleRing {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  opacity: 0.1;
+}
+
+.brandingContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 48px;
+  text-align: center;
+}
+
+.brandingTitle {
+  font-family: var(--font-display);
+  font-size: 3.75rem;
+  font-weight: 700;
+  color: var(--off-white);
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+
+.brandingSubtitle {
+  font-size: 1.5rem;
+  color: var(--gold);
+  font-weight: 300;
+  margin-bottom: 32px;
+}
+
+.brandingDesc {
+  color: rgba(250, 250, 247, 0.7);
+  font-size: 1.125rem;
+  line-height: 1.7;
+  max-width: 400px;
+  margin-bottom: 24px;
+}
+
+.stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+}
+
+.statItem {
+  text-align: center;
+}
+
+.statValue {
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  color: rgba(250, 250, 247, 0.5);
+}
+
+.rightSide {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: var(--gray-100);
+}
+
+@media (min-width: 1024px) {
+  .rightSide {
+    width: 50%;
+  }
+}
+
+.formContainer {
+  width: 100%;
+  max-width: 448px;
+}
+
+.mobileLogo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+@media (min-width: 1024px) {
+  .mobileLogo {
+    display: none;
+  }
+}
+
+.mobileLogoTitle {
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.mobileLogoSubtitle {
+  color: var(--gold);
+  font-size: 1rem;
+}
+
+.formCard {
+  background: var(--white);
+  border-radius: var(--radius-2xl);
+  padding: 32px;
+  box-shadow: var(--shadow-lg);
+}
+
+.formHeader {
+  margin-bottom: 32px;
+}
+
+.formTitle {
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.formSubtitle {
+  color: var(--gray-600);
+  font-size: 1rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+.inputWrapper {
+  position: relative;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: var(--gray-400);
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px 12px 48px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
+  transition: all var(--transition-base);
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.1);
+}
+
+.input::placeholder {
+  color: var(--gray-400);
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rememberMe {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold);
+}
+
+.rememberLabel {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+}
+
+.forgotPassword {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gold);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.forgotPassword:hover {
+  color: var(--gold-dark);
+}
+
+.submitButton {
+  width: 100%;
+  padding: 16px;
+  background: var(--gradient-navy);
+  color: var(--off-white);
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: var(--shadow-md);
+}
+
+.submitButton:hover {
+  background: var(--navy);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.submitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.divider {
+  position: relative;
+  margin: 8px 0;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  height: 1px;
+  background: var(--gray-200);
+}
+
+.dividerText {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.dividerText span {
+  background: var(--white);
+  padding: 0 16px;
+  color: var(--gray-500);
+  font-size: 0.875rem;
+}
+
+.registerPrompt {
+  text-align: center;
+  color: var(--gray-600);
+  font-size: 1rem;
+}
+
+.registerLink {
+  font-weight: 600;
+  color: var(--gold);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.registerLink:hover {
+  color: var(--gold-dark);
+}
+
+.backToHome {
+  text-align: center;
+  margin-top: 32px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gray-500);
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color var(--transition-fast);
+}
+
+.backLink:hover {
+  color: var(--navy);
+}
+
+.backIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

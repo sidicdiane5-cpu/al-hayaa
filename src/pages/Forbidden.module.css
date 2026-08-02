@@ -1,0 +1,147 @@
+.forbiddenPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-100);
+  padding: 32px;
+}
+
+.content {
+  max-width: 544px;
+  width: 100%;
+  text-align: center;
+}
+
+.iconContainer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 128px;
+  height: 128px;
+  background: var(--gradient-navy);
+  border-radius: 50%;
+  margin-bottom: 32px;
+  box-shadow: var(--shadow-lg);
+}
+
+.lockIcon {
+  color: var(--gold);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 6rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0 0 8px 0;
+  line-height: 1;
+}
+
+.subtitle {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin: 0 0 24px 0;
+}
+
+.message {
+  font-size: 1.125rem;
+  color: var(--gray-600);
+  line-height: 1.7;
+  margin-bottom: 40px;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+@media (min-width: 640px) {
+  .actions {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
+
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: var(--gradient-navy);
+  color: var(--off-white);
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-md);
+}
+
+.primaryButton:hover {
+  background: var(--navy);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: transparent;
+  color: var(--navy);
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  border: 2px solid var(--navy);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+}
+
+.secondaryButton:hover {
+  background: var(--navy);
+  color: var(--off-white);
+}
+
+.securityInfo {
+  padding: 16px;
+  background: rgba(201, 168, 76, 0.1);
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  border-radius: var(--radius-lg);
+}
+
+.securityText {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.securityIcon {
+  width: 16px;
+  height: 16px;
+  color: var(--gold);
+}
+
+@media (max-width: 640px) {
+  .title {
+    font-size: 4rem;
+  }
+
+  .subtitle {
+    font-size: 1.5rem;
+  }
+
+  .message {
+    font-size: 1rem;
+  }
+}

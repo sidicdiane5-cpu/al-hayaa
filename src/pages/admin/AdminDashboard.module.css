@@ -1,0 +1,329 @@
+.dashboard {
+  width: 100%;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.header h1 {
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 8px;
+}
+
+.header p {
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+@media (min-width: 640px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .statsGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.statCard {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 24px;
+}
+
+.statCardContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.statInfo {
+  flex: 1;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-600);
+  margin-bottom: 4px;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 8px;
+}
+
+.statTrend {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  gap: 4px;
+}
+
+.statTrend.up {
+  color: var(--success);
+}
+
+.statTrend.down {
+  color: var(--error);
+}
+
+.statTrend span:last-child {
+  color: var(--gray-500);
+  margin-left: 4px;
+}
+
+.statIcon {
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statIcon svg {
+  width: 24px;
+  height: 24px;
+  color: var(--white);
+}
+
+.statIcon.blue {
+  background: var(--primary);
+}
+
+.statIcon.green {
+  background: var(--success);
+}
+
+.statIcon.purple {
+  background: #8b5cf6;
+}
+
+.statIcon.orange {
+  background: #f97316;
+}
+
+.alertsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+@media (min-width: 1024px) {
+  .alertsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.alertCard {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 24px;
+}
+
+.alertHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.alertHeader h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+.alertIcon {
+  color: #eab308;
+}
+
+.alertItems {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.alertItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+}
+
+.alertItem.red {
+  background: #fef2f2;
+}
+
+.alertItem.yellow {
+  background: #fefce8;
+}
+
+.alertItemInfo p:first-child {
+  font-weight: 500;
+  color: var(--gray-900);
+  margin: 0 0 4px 0;
+}
+
+.alertItemInfo p:last-child {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.alertBadge {
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.alertBadge.red {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.alertBadge.yellow {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.pendingOrders {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.pendingOrdersCount {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+
+.pendingOrdersLabel {
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.recentOrders {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.recentOrdersHeader {
+  padding: 24px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.recentOrdersHeader h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+.tableContainer {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+}
+
+.table thead {
+  background: var(--gray-50);
+}
+
+.table th {
+  padding: 12px 24px;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table tbody {
+  border-top: 1px solid var(--gray-200);
+}
+
+.table tbody tr {
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.table tbody tr:hover {
+  background: var(--gray-50);
+}
+
+.table td {
+  padding: 16px 24px;
+  white-space: nowrap;
+}
+
+.table td:first-child {
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.table td:nth-child(2),
+.table td:nth-child(5) {
+  color: var(--gray-600);
+}
+
+.table td:nth-child(3) {
+  color: var(--gray-900);
+}
+
+.statusBadge {
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.statusBadge.pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.statusBadge.confirmed {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.statusBadge.shipped {
+  background: #f3e8ff;
+  color: #9333ea;
+}
+
+.statusBadge.delivered {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.statusBadge.cancelled {
+  background: #fee2e2;
+  color: #dc2626;
+}
