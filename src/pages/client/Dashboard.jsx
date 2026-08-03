@@ -33,45 +33,69 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Mon compte</h1>
-          <p className="mt-2 text-gray-600">
+    <div style={{ minHeight: '80vh', padding: 'var(--space-12) var(--space-4)', backgroundColor: 'var(--beige)' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+        <div style={{ marginBottom: 'var(--space-8)' }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-4xl)', fontWeight: 600, color: 'var(--navy)', marginBottom: 'var(--space-2)' }}>
+            Mon compte
+          </h1>
+          <p style={{ color: 'var(--gray-500)', fontSize: 'var(--text-lg)' }}>
             Bienvenue, {user.firstName} {user.lastName}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: 'var(--space-8)' }}>
           {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <nav className="space-y-2">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-6)', boxShadow: 'var(--shadow-sm)' }}>
+              <nav style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
                   return (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                        activeTab === tab.id
-                          ? 'bg-gold text-navy'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--space-3)',
+                        padding: 'var(--space-3) var(--space-4)',
+                        borderRadius: 'var(--radius-md)',
+                        border: 'none',
+                        backgroundColor: activeTab === tab.id ? 'var(--gold)' : 'transparent',
+                        color: activeTab === tab.id ? 'var(--navy)' : 'var(--gray-600)',
+                        cursor: 'pointer',
+                        transition: 'all var(--transition-base)',
+                        fontSize: 'var(--text-base)',
+                      }}
                     >
-                      <Icon className="w-5 h-5" />
+                      <Icon size={20} />
                       <span>{tab.label}</span>
                     </button>
                   );
                 })}
               </nav>
 
-              <div className="mt-8 pt-8 border-t border-gray-200">
+              <div style={{ marginTop: 'var(--space-8)', paddingTop: 'var(--space-8)', borderTop: '1px solid var(--gray-200)' }}>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-3)',
+                    padding: 'var(--space-3) var(--space-4)',
+                    borderRadius: 'var(--radius-md)',
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    color: 'var(--error)',
+                    cursor: 'pointer',
+                    transition: 'all var(--transition-base)',
+                    fontSize: 'var(--text-base)',
+                  }}
                 >
-                  <LogOut className="w-5 h-5" />
+                  <LogOut size={20} />
                   <span>Déconnexion</span>
                 </button>
               </div>
@@ -79,46 +103,50 @@ export default function Dashboard() {
           </div>
 
           {/* Main content */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-lg shadow-sm p-6">
+          <div>
+            <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-6)', boxShadow: 'var(--shadow-sm)' }}>
               {activeTab === 'overview' && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Vue d'ensemble</h2>
+                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 600, color: 'var(--navy)', marginBottom: 'var(--space-6)' }}>
+                    Vue d'ensemble
+                  </h2>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-gradient-to-br from-navy to-navy-light rounded-lg p-6 text-white">
-                      <ShoppingBag className="w-8 h-8 mb-2" />
-                      <p className="text-sm opacity-80">Commandes</p>
-                      <p className="text-3xl font-bold">0</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-6)', marginBottom: 'var(--space-8)' }}>
+                    <div style={{ background: 'var(--gradient-navy)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-6)', color: 'var(--white)' }}>
+                      <ShoppingBag size={32} style={{ marginBottom: 'var(--space-2)' }} />
+                      <p style={{ fontSize: 'var(--text-sm)', opacity: 0.8 }}>Commandes</p>
+                      <p style={{ fontSize: 'var(--text-3xl)', fontWeight: 600 }}>0</p>
                     </div>
                     
-                    <div className="bg-gradient-to-br from-gold to-gold-light rounded-lg p-6 text-navy">
-                      <Heart className="w-8 h-8 mb-2" />
-                      <p className="text-sm opacity-80">Favoris</p>
-                      <p className="text-3xl font-bold">0</p>
+                    <div style={{ background: 'var(--gradient-gold)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-6)', color: 'var(--navy)' }}>
+                      <Heart size={32} style={{ marginBottom: 'var(--space-2)' }} />
+                      <p style={{ fontSize: 'var(--text-sm)', opacity: 0.8 }}>Favoris</p>
+                      <p style={{ fontSize: 'var(--text-3xl)', fontWeight: 600 }}>0</p>
                     </div>
                     
-                    <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white">
-                      <Star className="w-8 h-8 mb-2" />
-                      <p className="text-sm opacity-80">Avis</p>
-                      <p className="text-3xl font-bold">0</p>
+                    <div style={{ background: 'linear-gradient(135deg, #27AE60 0%, #2ECC71 100%)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-6)', color: 'var(--white)' }}>
+                      <Star size={32} style={{ marginBottom: 'var(--space-2)' }} />
+                      <p style={{ fontSize: 'var(--text-sm)', opacity: 0.8 }}>Avis</p>
+                      <p style={{ fontSize: 'var(--text-3xl)', fontWeight: 600 }}>0</p>
                     </div>
                   </div>
 
-                  <div className="border-t border-gray-200 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations personnelles</h3>
-                    <div className="space-y-3">
+                  <div style={{ borderTop: '1px solid var(--gray-200)', paddingTop: 'var(--space-6)' }}>
+                    <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, color: 'var(--navy)', marginBottom: 'var(--space-4)' }}>
+                      Informations personnelles
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                       <div>
-                        <p className="text-sm text-gray-500">Nom complet</p>
-                        <p className="text-gray-900">{user.firstName} {user.lastName}</p>
+                        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-500)' }}>Nom complet</p>
+                        <p style={{ color: 'var(--navy)' }}>{user.firstName} {user.lastName}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Email</p>
-                        <p className="text-gray-900">{user.email}</p>
+                        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-500)' }}>Email</p>
+                        <p style={{ color: 'var(--navy)' }}>{user.email}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Téléphone</p>
-                        <p className="text-gray-900">{user.phone || 'Non renseigné'}</p>
+                        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-500)' }}>Téléphone</p>
+                        <p style={{ color: 'var(--navy)' }}>{user.phone || 'Non renseigné'}</p>
                       </div>
                     </div>
                   </div>
@@ -127,13 +155,25 @@ export default function Dashboard() {
 
               {activeTab === 'orders' && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Mes commandes</h2>
-                  <div className="text-center py-12">
-                    <ShoppingBag className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                    <p className="text-gray-500">Vous n'avez pas encore de commandes</p>
+                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 600, color: 'var(--navy)', marginBottom: 'var(--space-6)' }}>
+                    Mes commandes
+                  </h2>
+                  <div style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
+                    <ShoppingBag size={64} style={{ margin: '0 auto var(--space-4)', color: 'var(--gray-300)' }} />
+                    <p style={{ color: 'var(--gray-500)' }}>Vous n'avez pas encore de commandes</p>
                     <button
                       onClick={() => navigate('/boutique')}
-                      className="mt-4 px-6 py-2 bg-gold text-navy rounded-lg font-medium hover:bg-gold-light transition-colors"
+                      style={{
+                        marginTop: 'var(--space-4)',
+                        padding: 'var(--space-2) var(--space-6)',
+                        backgroundColor: 'var(--gold)',
+                        color: 'var(--navy)',
+                        borderRadius: 'var(--radius-lg)',
+                        fontWeight: 500,
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'all var(--transition-base)',
+                      }}
                     >
                       Découvrir nos produits
                     </button>
@@ -143,13 +183,25 @@ export default function Dashboard() {
 
               {activeTab === 'favorites' && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Mes favoris</h2>
-                  <div className="text-center py-12">
-                    <Heart className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                    <p className="text-gray-500">Vous n'avez pas encore de favoris</p>
+                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 600, color: 'var(--navy)', marginBottom: 'var(--space-6)' }}>
+                    Mes favoris
+                  </h2>
+                  <div style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
+                    <Heart size={64} style={{ margin: '0 auto var(--space-4)', color: 'var(--gray-300)' }} />
+                    <p style={{ color: 'var(--gray-500)' }}>Vous n'avez pas encore de favoris</p>
                     <button
                       onClick={() => navigate('/boutique')}
-                      className="mt-4 px-6 py-2 bg-gold text-navy rounded-lg font-medium hover:bg-gold-light transition-colors"
+                      style={{
+                        marginTop: 'var(--space-4)',
+                        padding: 'var(--space-2) var(--space-6)',
+                        backgroundColor: 'var(--gold)',
+                        color: 'var(--navy)',
+                        borderRadius: 'var(--radius-lg)',
+                        fontWeight: 500,
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'all var(--transition-base)',
+                      }}
                     >
                       Découvrir nos produits
                     </button>
@@ -159,22 +211,38 @@ export default function Dashboard() {
 
               {activeTab === 'reviews' && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Mes avis</h2>
-                  <div className="text-center py-12">
-                    <Star className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                    <p className="text-gray-500">Vous n'avez pas encore d'avis</p>
-                    <p className="text-sm text-gray-400 mt-2">Les avis apparaissent ici après avoir effectué un achat</p>
+                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 600, color: 'var(--navy)', marginBottom: 'var(--space-6)' }}>
+                    Mes avis
+                  </h2>
+                  <div style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
+                    <Star size={64} style={{ margin: '0 auto var(--space-4)', color: 'var(--gray-300)' }} />
+                    <p style={{ color: 'var(--gray-500)' }}>Vous n'avez pas encore d'avis</p>
+                    <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', marginTop: 'var(--space-2)' }}>
+                      Les avis apparaissent ici après avoir effectué un achat
+                    </p>
                   </div>
                 </div>
               )}
 
               {activeTab === 'addresses' && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Mes adresses</h2>
-                  <div className="text-center py-12">
-                    <MapPin className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                    <p className="text-gray-500">Vous n'avez pas encore d'adresses enregistrées</p>
-                    <button className="mt-4 px-6 py-2 bg-gold text-navy rounded-lg font-medium hover:bg-gold-light transition-colors">
+                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 600, color: 'var(--navy)', marginBottom: 'var(--space-6)' }}>
+                    Mes adresses
+                  </h2>
+                  <div style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
+                    <MapPin size={64} style={{ margin: '0 auto var(--space-4)', color: 'var(--gray-300)' }} />
+                    <p style={{ color: 'var(--gray-500)' }}>Vous n'avez pas encore d'adresses enregistrées</p>
+                    <button style={{
+                      marginTop: 'var(--space-4)',
+                      padding: 'var(--space-2) var(--space-6)',
+                      backgroundColor: 'var(--gold)',
+                      color: 'var(--navy)',
+                      borderRadius: 'var(--radius-lg)',
+                      fontWeight: 500,
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'all var(--transition-base)',
+                    }}>
                       Ajouter une adresse
                     </button>
                   </div>
@@ -183,33 +251,57 @@ export default function Dashboard() {
 
               {activeTab === 'settings' && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Paramètres du compte</h2>
+                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 600, color: 'var(--navy)', marginBottom: 'var(--space-6)' }}>
+                    Paramètres du compte
+                  </h2>
                   
-                  <div className="space-y-6">
-                    <div className="border-b border-gray-200 pb-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Modifier le mot de passe</h3>
-                      <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+                    <div style={{ borderBottom: '1px solid var(--gray-200)', paddingBottom: 'var(--space-6)' }}>
+                      <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, color: 'var(--navy)', marginBottom: 'var(--space-4)' }}>
+                        Modifier le mot de passe
+                      </h3>
+                      <button style={{
+                        padding: 'var(--space-2) var(--space-4)',
+                        border: '1px solid var(--gray-300)',
+                        borderRadius: 'var(--radius-md)',
+                        backgroundColor: 'transparent',
+                        color: 'var(--gray-600)',
+                        cursor: 'pointer',
+                        transition: 'all var(--transition-base)',
+                      }}>
                         Changer mon mot de passe
                       </button>
                     </div>
 
-                    <div className="border-b border-gray-200 pb-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations personnelles</h3>
-                      <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    <div style={{ borderBottom: '1px solid var(--gray-200)', paddingBottom: 'var(--space-6)' }}>
+                      <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, color: 'var(--navy)', marginBottom: 'var(--space-4)' }}>
+                        Informations personnelles
+                      </h3>
+                      <button style={{
+                        padding: 'var(--space-2) var(--space-4)',
+                        border: '1px solid var(--gray-300)',
+                        borderRadius: 'var(--radius-md)',
+                        backgroundColor: 'transparent',
+                        color: 'var(--gray-600)',
+                        cursor: 'pointer',
+                        transition: 'all var(--transition-base)',
+                      }}>
                         Modifier mes informations
                       </button>
                     </div>
 
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Préférences</h3>
-                      <div className="space-y-3">
-                        <label className="flex items-center space-x-3">
-                          <input type="checkbox" className="rounded text-gold focus:ring-gold" />
-                          <span className="text-gray-700">Recevoir les offres par email</span>
+                      <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, color: 'var(--navy)', marginBottom: 'var(--space-4)' }}>
+                        Préférences
+                      </h3>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer' }}>
+                          <input type="checkbox" style={{ accentColor: 'var(--gold)' }} />
+                          <span style={{ color: 'var(--gray-600)' }}>Recevoir les offres par email</span>
                         </label>
-                        <label className="flex items-center space-x-3">
-                          <input type="checkbox" className="rounded text-gold focus:ring-gold" />
-                          <span className="text-gray-700">Recevoir les notifications de commande</span>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer' }}>
+                          <input type="checkbox" style={{ accentColor: 'var(--gold)' }} />
+                          <span style={{ color: 'var(--gray-600)' }}>Recevoir les notifications de commande</span>
                         </label>
                       </div>
                     </div>
