@@ -1,279 +1,139 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  Users, 
-  AlertTriangle, 
-  Star, 
-  Tag, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Users,
+  AlertTriangle,
+  Star,
+  Tag,
+  Settings,
   LogOut,
   Menu,
   X,
-  Bell
 } from 'lucide-react';
+import styles from './AdminLayout.module.css';
+
+const menuItems = [
+  { id: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard, path: '/admin/dashboard' },
+  { id: 'products', label: 'Produits', icon: Package, path: '/admin/products' },
+  { id: 'orders', label: 'Commandes', icon: ShoppingCart, path: '/admin/orders' },
+  { id: 'customers', label: 'Clients', icon: Users, path: '/admin/customers' },
+  { id: 'stock', label: 'Stock', icon: AlertTriangle, path: '/admin/stock' },
+  { id: 'reviews', label: 'Avis', icon: Star, path: '/admin/reviews' },
+  { id: 'promotions', label: 'Promotions', icon: Tag, path: '/admin/promotions' },
+  { id: 'settings', label: 'Paramètres', icon: Settings, path: '/admin/settings' },
+];
 
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, isAdmin } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Contournement temporaire : permettre l'accès si l'email est admin@daralhayaa.com
-  const isAdminEmail = user?.email === 'admin@daralhayaa.com';
-  const hasAdminAccess = isAdmin() || isAdminEmail;
-
-  if (!hasAdminAccess) {
-    navigate('/');
-    return null;
-  }
+  // Le controle d'acces est fait en amont par ProtectedAdminRoute : appeler
+  // navigate() pendant le rendu provoquerait un warning React et un ecran vide.
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate('/admin');
   };
 
-  const menuItems = [
-    { id: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard, path: '/admin/dashboard' },
-    { id: 'products', label: 'Produits', icon: Package, path: '/admin/products' },
-    { id: 'orders', label: 'Commandes', icon: ShoppingCart, path: '/admin/orders' },
-    { id: 'customers', label: 'Clients', icon: Users, path: '/admin/customers' },
-    { id: 'stock', label: 'Stock', icon: AlertTriangle, path: '/admin/stock' },
-    { id: 'reviews', label: 'Avis', icon: Star, path: '/admin/reviews' },
-    { id: 'promotions', label: 'Promotions', icon: Tag, path: '/admin/promotions' },
-    { id: 'settings', label: 'Paramètres', icon: Settings, path: '/admin/settings' },
-  ];
+  const currentPage =
+    menuItems.find((item) => location.pathname.startsWith(item.path))?.label ?? 'Administration';
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--gray-100)' }}>
-      {/* Mobile sidebar backdrop */}
+    <div className={styles.adminLayout}>
       {sidebarOpen && (
-        <div 
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 40,
-          }}
+        <div
+          className={styles.sidebarBackdrop}
           onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
         />
       )}
 
-      {/* Sidebar */}
-      <aside style={{
-        position: 'fixed',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        width: '280px',
-        backgroundColor: 'var(--navy)',
-        color: 'white',
-        zIndex: 50,
-        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
-        transition: 'transform var(--transition-base)',
-        display: 'flex',
-        flexDirection: 'column',
-      }}>
-        <div style={{
-          padding: 'var(--space-6)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
-          <h1 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'var(--text-lg)',
-            fontWeight: 600,
-            color: 'var(--gold)',
-            margin: 0,
-          }}>Admin Panel</h1>
+      <aside
+        className={`${styles.sidebar} ${sidebarOpen ? styles.open : ''}`}
+        aria-label="Navigation administration"
+      >
+        <div className={styles.sidebarHeader}>
+          <span className={styles.sidebarTitle} style={{ color: 'var(--gold)' }}>
+            Dar Al-Hayaa
+          </span>
           <button
+            type="button"
+            className={styles.closeButton}
             onClick={() => setSidebarOpen(false)}
-            style={{
-              backgroundColor: 'transparent',
-              border: 'none',
-              color: 'white',
-              cursor: 'pointer',
-              padding: 'var(--space-2)',
-            }}
           >
-            <X size={24} />
+            <X size={22} />
+            <span className="sr-only">Fermer le menu</span>
           </button>
         </div>
 
-        <nav style={{
-          flex: 1,
-          padding: 'var(--space-4)',
-          overflowY: 'auto',
-        }}>
+        <nav className={styles.sidebarNav}>
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
-            
+            const isActive = location.pathname.startsWith(item.path);
             return (
               <Link
                 key={item.id}
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--space-3)',
-                  padding: 'var(--space-3)',
-                  color: isActive ? 'var(--gold)' : 'white',
-                  textDecoration: 'none',
-                  borderRadius: 'var(--radius-md)',
-                  backgroundColor: isActive ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                  transition: 'all var(--transition-base)',
-                  marginBottom: 'var(--space-2)',
-                }}
+                className={`${styles.navItem} ${isActive ? styles.active : ''}`}
+                aria-current={isActive ? 'page' : undefined}
               >
-                <Icon size={20} />
+                <Icon className={styles.navItemIcon} />
                 <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div style={{
-          padding: 'var(--space-4)',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-3)',
-            marginBottom: 'var(--space-4)',
-          }}>
-            <div style={{
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
-              backgroundColor: 'var(--gold)',
-              color: 'var(--navy)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 600,
-            }}>
-              {user?.firstName?.[0] || 'A'}
+        <div className={styles.sidebarFooter}>
+          <div className={styles.userInfo}>
+            <div className={styles.userAvatar}>
+              {(user?.firstName?.[0] || user?.email?.[0] || 'A').toUpperCase()}
             </div>
-            <div>
-              <p style={{
-                fontWeight: 500,
-                margin: 0,
-                fontSize: 'var(--text-sm)',
-              }}>{user?.firstName} {user?.lastName}</p>
-              <p style={{
-                fontSize: 'var(--text-xs)',
-                color: 'var(--gray-400)',
-                margin: 0,
-              }}>{user?.role}</p>
+            <div className={styles.userDetails}>
+              <p className={styles.userName}>
+                {user?.name || user?.email}
+              </p>
+              <p className={styles.userRole}>{user?.role}</p>
             </div>
           </div>
-          
-          <button
-            onClick={handleLogout}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--space-2)',
-              width: '100%',
-              padding: 'var(--space-3)',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              color: 'white',
-              border: 'none',
-              borderRadius: 'var(--radius-md)',
-              cursor: 'pointer',
-              transition: 'background-color var(--transition-base)',
-            }}
-          >
+
+          <button type="button" className={styles.logoutButton} onClick={handleLogout}>
             <LogOut size={20} />
             <span>Déconnexion</span>
           </button>
         </div>
       </aside>
 
-      {/* Main content */}
-      <div style={{
-        flex: 1,
-        marginLeft: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100%',
-      }}>
-        {/* Top bar */}
-        <header style={{
-          backgroundColor: 'var(--white)',
-          padding: 'var(--space-4)',
-          borderBottom: '1px solid var(--gray-200)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+      <div className={styles.mainContent}>
+        <header className={styles.topBar}>
+          <div className={styles.topBarContent}>
             <button
+              type="button"
+              className={styles.menuButton}
               onClick={() => setSidebarOpen(true)}
-              style={{
-                backgroundColor: 'transparent',
-                border: 'none',
-                color: 'var(--navy)',
-                cursor: 'pointer',
-                padding: 'var(--space-2)',
-              }}
             >
               <Menu size={24} />
+              <span className="sr-only">Ouvrir le menu</span>
             </button>
-          </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
-            <button style={{
-              position: 'relative',
-              backgroundColor: 'transparent',
-              border: 'none',
-              color: 'var(--navy)',
-              cursor: 'pointer',
-              padding: 'var(--space-2)',
-            }}>
-              <Bell size={24} />
-              <span style={{
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                width: 8,
-                height: 8,
-                backgroundColor: 'var(--error)',
-                borderRadius: '50%',
-              }}></span>
-            </button>
-            
-            <Link
-              to="/"
-              style={{
-                padding: 'var(--space-2) var(--space-4)',
-                backgroundColor: 'var(--navy)',
-                color: 'white',
-                textDecoration: 'none',
-                borderRadius: 'var(--radius-md)',
-                fontSize: 'var(--text-sm)',
-                fontWeight: 500,
-              }}
-            >
-              Voir le site
-            </Link>
+            <span style={{ fontWeight: 600, color: 'var(--navy)' }}>{currentPage}</span>
+
+            <div className={styles.topBarActions}>
+              <Link to="/" className={styles.viewSiteLink}>
+                Voir le site
+              </Link>
+            </div>
           </div>
         </header>
 
-        {/* Page content */}
-        <main style={{
-          flex: 1,
-          padding: 'var(--space-6)',
-          overflowY: 'auto',
-        }}>
+        <main className={styles.pageContent}>
           <Outlet />
         </main>
       </div>

@@ -78,23 +78,27 @@ const ProtectedAdminRoute = ({ children }) => {
     return <Navigate to="/admin" replace />;
   }
 
-  // Debug logging
-  console.log('[ProtectedAdminRoute] User:', user);
-  console.log('[ProtectedAdminRoute] User role:', user?.role);
-  console.log('[ProtectedAdminRoute] User email:', user?.email);
-  console.log('[ProtectedAdminRoute] Is admin/manager:', user?.role === 'admin' || user?.role === 'manager');
-
-  // Permettre l'accès si le rôle est admin ou manager, OU si l'email est admin@daralhayaa.com
-  // (contournement temporaire pour permettre l'accès admin)
-  const isAdminEmail = user?.email === 'admin@daralhayaa.com';
+  // Le role fait foi : il vient de public.profiles, protege par RLS.
   const hasAdminRole = user?.role === 'admin' || user?.role === 'manager';
-  
-  if (!user || (!hasAdminRole && !isAdminEmail)) {
-    console.log('[ProtectedAdminRoute] Access denied - redirecting to /forbidden');
+
+  if (!hasAdminRole) {
     return <Navigate to="/forbidden" replace />;
   }
 
   return children;
+};
+
+// Empeche un staff deja connecte de rester bloque sur l'ecran de connexion.
+const AdminLoginRoute = () => {
+  const { isAuthenticated, user, isInitializing } = useAuthStore();
+
+  if (isInitializing) return <AuthLoading />;
+
+  if (isAuthenticated && (user?.role === 'admin' || user?.role === 'manager')) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  return <AdminLogin />;
 };
 
 // Layout component to hide Header/Footer on specific routes (like Admin)
@@ -214,47 +218,23 @@ export default function App() {
             <Route path="/suivi-commande" element={<OrderTrackingPage />} />
             
             {/* Admin */}
-            <Route path="/admin" element={<AdminLogin />} />
-            <Route path="/admin/dashboard" element={
-              <ProtectedAdminRoute>
-                <AdminLayout><AdminDashboard /></AdminLayout>
-              </ProtectedAdminRoute>
-            } />
-            <Route path="/admin/products" element={
-              <ProtectedAdminRoute>
-                <AdminLayout><AdminProducts /></AdminLayout>
-              </ProtectedAdminRoute>
-            } />
-            <Route path="/admin/orders" element={
-              <ProtectedAdminRoute>
-                <AdminLayout><AdminOrders /></AdminLayout>
-              </ProtectedAdminRoute>
-            } />
-            <Route path="/admin/customers" element={
-              <ProtectedAdminRoute>
-                <AdminLayout><AdminCustomers /></AdminLayout>
-              </ProtectedAdminRoute>
-            } />
-            <Route path="/admin/stock" element={
-              <ProtectedAdminRoute>
-                <AdminLayout><AdminStock /></AdminLayout>
-              </ProtectedAdminRoute>
-            } />
-            <Route path="/admin/reviews" element={
-              <ProtectedAdminRoute>
-                <AdminLayout><AdminReviews /></AdminLayout>
-              </ProtectedAdminRoute>
-            } />
-            <Route path="/admin/promotions" element={
-              <ProtectedAdminRoute>
-                <AdminLayout><AdminPromotions /></AdminLayout>
-              </ProtectedAdminRoute>
-            } />
-            <Route path="/admin/settings" element={
-              <ProtectedAdminRoute>
-                <AdminLayout><AdminSettings /></AdminLayout>
-              </ProtectedAdminRoute>
-            } />
+            <Route path="/admin" element={<AdminLoginRoute />} />
+            <Route
+              element={
+                <ProtectedAdminRoute>
+                  <AdminLayout />
+                </ProtectedAdminRoute>
+              }
+            >
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/products" element={<AdminProducts />} />
+              <Route path="/admin/orders" element={<AdminOrders />} />
+              <Route path="/admin/customers" element={<AdminCustomers />} />
+              <Route path="/admin/stock" element={<AdminStock />} />
+              <Route path="/admin/reviews" element={<AdminReviews />} />
+              <Route path="/admin/promotions" element={<AdminPromotions />} />
+              <Route path="/admin/settings" element={<AdminSettings />} />
+            </Route>
             
             {/* 403 Forbidden */}
             <Route path="/forbidden" element={<Forbidden />} />

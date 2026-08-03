@@ -44,7 +44,7 @@ function translateError(message = '') {
 // Recupere le profil de l'utilisateur connecte.
 async function fetchProfile(userId) {
   const { data, error } = await supabase
-    .from('users')
+    .from('profiles')
     .select('*')
     .eq('id', userId)
     .maybeSingle();
@@ -91,7 +91,7 @@ export const useAuthStore = create((set, get) => ({
 
       // Trace de derniere connexion (non bloquant)
       supabase
-        .from('users')
+        .from('profiles')
         .update({ last_login_at: new Date().toISOString() })
         .eq('id', data.user.id)
         .then(({ error: e }) => e && console.error('[v0] last_login_at:', e.message));
@@ -310,7 +310,7 @@ export const useAuthStore = create((set, get) => ({
       }
 
       const { data, error } = await supabase
-        .from('users')
+        .from('profiles')
         .update({
           first_name: firstName,
           last_name: lastName,

@@ -100,7 +100,7 @@ export function mapOrder(row) {
 
 export function mapReview(row) {
   if (!row) return null;
-  const p = row.users;
+  const p = row.profiles;
   return {
     id: row.id,
     userId: row.user_id,
@@ -153,6 +153,79 @@ export async function getProduct(id) {
 export async function deleteProduct(id) {
   const { error } = await supabase.from('products').delete().eq('id', id);
   if (error) throw new Error(error.message);
+}
+
+// Traduit un produit camelCase (formulaire admin) vers les colonnes SQL.
+function toProductRow(input) {
+  const price = Number(input.price) || 0;
+  const originalPrice =
+    input.originalPrice === '' || input.originalPrice == null
+      ? null
+      : Number(input.originalPrice);
+
+  // La remise est toujours recalculee cote serveur a partir des deux prix :
+  // on ne fait jamais confiance a une valeur saisie a la main.
+  const discount =
+    originalPrice && originalPrice > price
+      ? Math.round(((originalPrice - price) / originalPrice) * 100)
+      : 0;
+
+  const asArray = (v) =>
+    Array.isArray(v)
+      ? v.filter(Boolean)
+      : String(v ?? '')
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+
+  return {
+    name: String(input.name ?? '').trim(),
+    category: input.category || null,
+    subcategory: input.subcategory || null,
+    price,
+    original_price: originalPrice,
+    discount,
+    stock: Math.max(0, Math.trunc(Number(input.stock) || 0)),
+    is_new: !!input.isNew,
+    is_bestseller: !!input.isBestseller,
+    featured: !!input.featured,
+    colors: asArray(input.colors),
+    sizes: asArray(input.sizes),
+    images: asArray(input.images),
+    tags: asArray(input.tags),
+    description: input.description ?? '',
+    updated_at: new Date().toISOString(),
+  };
+}
+
+export async function createProduct(input) {
+  const row = toProductRow(input);
+  if (!row.name) throw new Error('Le nom du produit est obligatoire');
+
+  // Identifiant lisible et unique, aligne sur le format existant (ex: p-1712...).
+  const id = input.id?.trim() || `p-${Date.now().toString(36)}`;
+
+  const { data, error } = await supabase
+    .from('products')
+    .insert({ ...row, id })
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return mapProduct(data);
+}
+
+export async function updateProduct(id, input) {
+  const row = toProductRow(input);
+  if (!row.name) throw new Error('Le nom du produit est obligatoire');
+
+  const { data, error } = await supabase
+    .from('products')
+    .update(row)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return mapProduct(data);
 }
 
 export async function updateProductStock(id, stock) {
@@ -402,7 +475,7 @@ export async function updatePaymentStatus(paymentId, status) {
 export async function getProductReviews(productId) {
   const { data, error } = await supabase
     .from('reviews')
-    .select('*, users(first_name, last_name, email)')
+    .select('*, profiles(first_name, last_name, email)')
     .eq('product_id', productId)
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
@@ -412,7 +485,7 @@ export async function getProductReviews(productId) {
 export async function getAllReviews() {
   const { data, error } = await supabase
     .from('reviews')
-    .select('*, users(first_name, last_name, email), products(name)')
+    .select('*, profiles(first_name, last_name, email), products(name)')
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
   return data.map(mapReview);
@@ -422,7 +495,7 @@ export async function createReview({ userId, productId, rating, comment }) {
   const { data, error } = await supabase
     .from('reviews')
     .insert({ user_id: userId, product_id: productId, rating, comment })
-    .select('*, users(first_name, last_name, email)')
+    .select('*, profiles(first_name, last_name, email)')
     .single();
   if (error) throw new Error(error.message);
   return mapReview(data);
@@ -446,7 +519,7 @@ export async function updateCouponStatus(couponId, isActive) {
 // ── CLIENTS (admin) ──────────────────────────────────────────
 export async function getCustomers() {
   const { data, error } = await supabase
-    .from('users')
+    .from('profiles')
     .select('*')
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
@@ -454,20 +527,20 @@ export async function getCustomers() {
 }
 
 export async function setCustomerRole(userId, role) {
-  const { error } = await supabase.from('users').update({ role }).eq('id', userId);
+  const { error } = await supabase.from('profiles').update({ role }).eq('id', userId);
   if (error) throw new Error(error.message);
 }
 
 export async function setCustomerActive(userId, isActive) {
   const { error } = await supabase
-    .from('users')
+    .from('profiles')
     .update({ is_active: isActive })
     .eq('id', userId);
   if (error) throw new Error(error.message);
 }
 
 export async function deleteCustomer(userId) {
-  const { error } = await supabase.from('users').delete().eq('id', userId);
+  const { error } = await supabase.from('profiles').delete().eq('id', userId);
   if (error) throw new Error(error.message);
 }
 
@@ -485,4 +558,122 @@ export async function getNotifications(userId) {
 export async function markNotificationRead(id) {
   const { error } = await supabase.from('notifications').update({ read: true }).eq('id', id);
   if (error) throw new Error(error.message);
+}
+
+// ── STATISTIQUES ADMIN ───────────────────────────────────────
+// Les commandes annulees ne comptent jamais dans le chiffre d'affaires.
+const REVENUE_EXCLUDED = ['cancelled', 'refunded'];
+
+export async function getDashboardStats() {
+  const [products, orders, customers] = await Promise.all([
+    getProducts(),
+    getOrders(),
+    getCustomers(),
+  ]);
+
+  const paidOrders = orders.filter((o) => !REVENUE_EXCLUDED.includes(o.status));
+  const totalRevenue = paidOrders.reduce((sum, o) => sum + o.total, 0);
+
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+  const inRange = (o, from, to) => {
+    const d = new Date(o.createdAt);
+    return d >= from && (!to || d < to);
+  };
+
+  const revenueThisMonth = paidOrders
+    .filter((o) => inRange(o, startOfMonth))
+    .reduce((s, o) => s + o.total, 0);
+  const revenuePrevMonth = paidOrders
+    .filter((o) => inRange(o, startOfPrevMonth, startOfMonth))
+    .reduce((s, o) => s + o.total, 0);
+
+  const ordersThisMonth = orders.filter((o) => inRange(o, startOfMonth)).length;
+  const ordersPrevMonth = orders.filter((o) => inRange(o, startOfPrevMonth, startOfMonth)).length;
+
+  const growth = (current, previous) => {
+    if (!previous) return current > 0 ? 100 : 0;
+    return Math.round(((current - previous) / previous) * 100);
+  };
+
+  // Chiffre d'affaires des 6 derniers mois, pour le graphique.
+  const revenueByMonth = [];
+  for (let i = 5; i >= 0; i -= 1) {
+    const from = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const to = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+    const monthOrders = paidOrders.filter((o) => inRange(o, from, to));
+    revenueByMonth.push({
+      label: from.toLocaleDateString('fr-FR', { month: 'short' }),
+      revenue: monthOrders.reduce((s, o) => s + o.total, 0),
+      orders: monthOrders.length,
+    });
+  }
+
+  // Repartition des commandes par statut.
+  const statusCounts = orders.reduce((acc, o) => {
+    acc[o.status] = (acc[o.status] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  // Meilleures ventes : agregation des lignes de commande.
+  const productSales = new Map();
+  for (const order of paidOrders) {
+    for (const item of order.items) {
+      const entry = productSales.get(item.productId) ?? {
+        productId: item.productId,
+        name: item.name,
+        quantity: 0,
+        revenue: 0,
+      };
+      entry.quantity += item.quantity;
+      entry.revenue += item.quantity * item.price;
+      productSales.set(item.productId, entry);
+    }
+  }
+  const topProducts = [...productSales.values()]
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+
+  const lowStockProducts = products
+    .filter((p) => p.stock <= 5)
+    .sort((a, b) => a.stock - b.stock);
+
+  return {
+    totalProducts: products.length,
+    totalOrders: orders.length,
+    totalCustomers: customers.filter((c) => c.role === 'client').length,
+    totalRevenue,
+    pendingOrders: orders.filter((o) => o.status === 'pending').length,
+    lowStock: lowStockProducts.length,
+    revenueThisMonth,
+    revenueGrowth: growth(revenueThisMonth, revenuePrevMonth),
+    ordersGrowth: growth(ordersThisMonth, ordersPrevMonth),
+    averageOrderValue: paidOrders.length ? totalRevenue / paidOrders.length : 0,
+    revenueByMonth,
+    statusCounts,
+    topProducts,
+    lowStockProducts: lowStockProducts.slice(0, 5),
+    recentOrders: orders.slice(0, 5),
+  };
+}
+
+// ── TEMPS REEL ───────────────────────────────────────────────
+// Abonne un callback aux changements Postgres des tables passees en argument.
+// Retourne une fonction de desabonnement a appeler dans le cleanup du useEffect.
+export function subscribeToTables(tables, onChange) {
+  const channel = supabase.channel(`admin-realtime-${tables.join('-')}`);
+
+  for (const table of tables) {
+    channel.on('postgres_changes', { event: '*', schema: 'public', table }, (payload) => {
+      onChange(payload);
+    });
+  }
+
+  channel.subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }
