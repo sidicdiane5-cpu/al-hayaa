@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Search, AlertTriangle, Package, TrendingUp } from 'lucide-react';
+import { getProducts } from '../../lib/api';
 
 export default function AdminStock() {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [stockFilter, setStockFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchProducts();
@@ -12,11 +14,13 @@ export default function AdminStock() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/products');
-      const data = await response.json();
+      setLoading(true);
+      const data = await getProducts();
       setProducts(data);
     } catch (error) {
       console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,71 +43,94 @@ export default function AdminStock() {
   const lowStockCount = products.filter(p => p.stock < 10 && p.stock > 0).length;
   const outOfStockCount = products.filter(p => p.stock === 0).length;
 
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <p style={{ color: 'var(--gray-500)' }}>Chargement...</p>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Gestion du Stock</h1>
-        <p className="mt-2 text-gray-600">Surveiller et gérer les niveaux de stock</p>
+      <div style={{ marginBottom: 'var(--space-8)' }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-3xl)', fontWeight: 600, color: 'var(--navy)' }}>
+          Gestion du Stock
+        </h1>
+        <p style={{ marginTop: 'var(--space-2)', color: 'var(--gray-500)' }}>Surveiller et gérer les niveaux de stock</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 'var(--space-6)', marginBottom: 'var(--space-8)' }}>
+        <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-6)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <p className="text-sm font-medium text-gray-600">Total produits</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{products.length}</p>
+              <p style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--gray-500)' }}>Total produits</p>
+              <p style={{ fontSize: 'var(--text-2xl)', fontWeight: 600, color: 'var(--navy)', marginTop: 'var(--space-1)' }}>{products.length}</p>
             </div>
-            <div className="p-3 rounded-lg bg-blue-100 text-blue-600">
-              <Package className="w-6 h-6" />
+            <div style={{ padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', backgroundColor: '#DBEAFE', color: '#2563EB' }}>
+              <Package size={24} />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between">
+        <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-6)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <p className="text-sm font-medium text-gray-600">Stock faible</p>
-              <p className="text-2xl font-bold text-yellow-600 mt-1">{lowStockCount}</p>
+              <p style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--gray-500)' }}>Stock faible</p>
+              <p style={{ fontSize: 'var(--text-2xl)', fontWeight: 600, color: '#D97706', marginTop: 'var(--space-1)' }}>{lowStockCount}</p>
             </div>
-            <div className="p-3 rounded-lg bg-yellow-100 text-yellow-600">
-              <AlertTriangle className="w-6 h-6" />
+            <div style={{ padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', backgroundColor: '#FEF3C7', color: '#D97706' }}>
+              <AlertTriangle size={24} />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between">
+        <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-6)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <p className="text-sm font-medium text-gray-600">Rupture de stock</p>
-              <p className="text-2xl font-bold text-red-600 mt-1">{outOfStockCount}</p>
+              <p style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--gray-500)' }}>Rupture de stock</p>
+              <p style={{ fontSize: 'var(--text-2xl)', fontWeight: 600, color: '#DC2626', marginTop: 'var(--space-1)' }}>{outOfStockCount}</p>
             </div>
-            <div className="p-3 rounded-lg bg-red-100 text-red-600">
-              <AlertTriangle className="w-6 h-6" />
+            <div style={{ padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', backgroundColor: '#FEE2E2', color: '#DC2626' }}>
+              <AlertTriangle size={24} />
             </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+      <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-6)', marginBottom: 'var(--space-6)', boxShadow: 'var(--shadow-sm)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-400)' }} size={20} />
             <input
               type="text"
               placeholder="Rechercher un produit..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+              style={{
+                width: '100%',
+                paddingLeft: '40px',
+                paddingRight: '16px',
+                padding: 'var(--space-2)',
+                border: '1px solid var(--gray-300)',
+                borderRadius: 'var(--radius-md)',
+                outline: 'none',
+              }}
             />
           </div>
           
-          <div className="flex items-center space-x-2">
+          <div>
             <select
               value={stockFilter}
               onChange={(e) => setStockFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+              style={{
+                padding: 'var(--space-2) var(--space-4)',
+                border: '1px solid var(--gray-300)',
+                borderRadius: 'var(--radius-md)',
+                outline: 'none',
+              }}
             >
               {stockOptions.map(option => (
                 <option key={option.id} value={option.id}>{option.label}</option>
@@ -114,78 +141,90 @@ export default function AdminStock() {
       </div>
 
       {/* Stock Table */}
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+      <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead style={{ backgroundColor: 'var(--gray-100)' }}>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Produit
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Catégorie
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Stock actuel
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Statut
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Prix
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody style={{ borderBottom: '1px solid var(--gray-200)' }}>
               {filteredProducts.map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-200">
+                <tr key={product.id} style={{ borderBottom: '1px solid var(--gray-200)' }}>
+                  <td style={{ padding: 'var(--space-3) var(--space-6)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 'var(--radius-md)', overflow: 'hidden', backgroundColor: 'var(--gray-200)' }}>
                         {product.images && product.images[0] ? (
                           <img
                             src={product.images[0]}
                             alt={product.name}
-                            className="w-full h-full object-cover"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            <Package className="w-6 h-6" />
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gray-400)' }}>
+                            <Package size={24} />
                           </div>
                         )}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">{product.name}</p>
-                        <p className="text-sm text-gray-500">{product.id}</p>
+                        <p style={{ fontWeight: 500, color: 'var(--navy)' }}>{product.name}</p>
+                        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-500)' }}>{product.id}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-600 capitalize">
+                  <td style={{ padding: 'var(--space-3) var(--space-6)', color: 'var(--gray-600)', textTransform: 'capitalize' }}>
                     {product.category}
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
+                  <td style={{ padding: 'var(--space-3) var(--space-6)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                       <input
                         type="number"
                         defaultValue={product.stock || 0}
-                        className="w-20 px-2 py-1 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-gold"
+                        style={{
+                          width: 80,
+                          padding: 'var(--space-1) var(--space-2)',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: 'var(--radius-md)',
+                          textAlign: 'center',
+                          outline: 'none',
+                        }}
                       />
-                      <button className="p-1 text-green-600 hover:bg-green-50 rounded">
-                        <TrendingUp className="w-4 h-4" />
+                      <button style={{ padding: 'var(--space-1)', color: '#16A34A', backgroundColor: 'transparent', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
+                        <TrendingUp size={16} />
                       </button>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                      (product.stock || 0) === 0 ? 'bg-red-100 text-red-800' :
-                      (product.stock || 0) < 10 ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
+                  <td style={{ padding: 'var(--space-3) var(--space-6)' }}>
+                    <span style={{
+                      padding: 'var(--space-1) var(--space-3)',
+                      fontSize: 'var(--text-sm)',
+                      fontWeight: 500,
+                      borderRadius: 'var(--radius-full)',
+                      backgroundColor: (product.stock || 0) === 0 ? '#FEE2E2' :
+                                   (product.stock || 0) < 10 ? '#FEF3C7' : '#D1FAE5',
+                      color: (product.stock || 0) === 0 ? '#991B1B' :
+                             (product.stock || 0) < 10 ? '#92400E' : '#065F46',
+                    }}>
                       {(product.stock || 0) === 0 ? 'Rupture' :
                        (product.stock || 0) < 10 ? 'Faible' : 'OK'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-gray-900">
+                  <td style={{ padding: 'var(--space-3) var(--space-6)', color: 'var(--navy)' }}>
                     {product.price.toLocaleString()} FCFA
                   </td>
                 </tr>
@@ -195,9 +234,9 @@ export default function AdminStock() {
         </div>
 
         {filteredProducts.length === 0 && (
-          <div className="text-center py-12">
-            <Package className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-            <p className="text-gray-500">Aucun produit trouvé</p>
+          <div style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
+            <Package size={64} style={{ margin: '0 auto var(--space-4)', color: 'var(--gray-300)' }} />
+            <p style={{ color: 'var(--gray-500)' }}>Aucun produit trouvé</p>
           </div>
         )}
       </div>

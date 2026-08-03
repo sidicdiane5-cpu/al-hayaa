@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Tag, Calendar, Percent } from 'lucide-react';
+import { getCoupons, updateCouponStatus, deleteCoupon } from '../../lib/api';
 
 export default function AdminPromotions() {
   const [coupons, setCoupons] = useState([]);
@@ -7,6 +8,7 @@ export default function AdminPromotions() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchCoupons();
@@ -14,11 +16,13 @@ export default function AdminPromotions() {
 
   const fetchCoupons = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/coupons');
-      const data = await response.json();
+      setLoading(true);
+      const data = await getCoupons();
       setCoupons(data);
     } catch (error) {
       console.error('Error fetching coupons:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,11 +42,7 @@ export default function AdminPromotions() {
 
   const handleToggleStatus = async (couponId, currentStatus) => {
     try {
-      await fetch(`http://localhost:3001/api/coupons/${couponId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: !currentStatus }),
-      });
+      await updateCouponStatus(couponId, !currentStatus);
       fetchCoupons();
     } catch (error) {
       console.error('Error toggling coupon status:', error);
@@ -52,9 +52,7 @@ export default function AdminPromotions() {
   const handleDelete = async (couponId) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce coupon ?')) {
       try {
-        await fetch(`http://localhost:3001/api/coupons/${couponId}`, {
-          method: 'DELETE',
-        });
+        await deleteCoupon(couponId);
         fetchCoupons();
       } catch (error) {
         console.error('Error deleting coupon:', error);
@@ -72,41 +70,75 @@ export default function AdminPromotions() {
     setShowModal(true);
   };
 
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <p style={{ color: 'var(--gray-500)' }}>Chargement...</p>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-8)' }}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Promotions</h1>
-          <p className="mt-2 text-gray-600">Gérer les codes promo et réductions</p>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-3xl)', fontWeight: 600, color: 'var(--navy)' }}>
+            Promotions
+          </h1>
+          <p style={{ marginTop: 'var(--space-2)', color: 'var(--gray-500)' }}>Gérer les codes promo et réductions</p>
         </div>
         <button
           onClick={handleAdd}
-          className="flex items-center space-x-2 px-4 py-2 bg-gold text-navy rounded-lg font-medium hover:bg-gold-light transition-colors"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-2)',
+            padding: 'var(--space-2) var(--space-4)',
+            backgroundColor: 'var(--gold)',
+            color: 'var(--navy)',
+            borderRadius: 'var(--radius-md)',
+            fontWeight: 500,
+            cursor: 'pointer',
+            border: 'none',
+          }}
         >
-          <Plus className="w-5 h-5" />
+          <Plus size={20} />
           <span>Ajouter un coupon</span>
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+      <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-6)', marginBottom: 'var(--space-6)', boxShadow: 'var(--shadow-sm)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-400)' }} size={20} />
             <input
               type="text"
               placeholder="Rechercher un coupon..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+              style={{
+                width: '100%',
+                paddingLeft: '40px',
+                paddingRight: '16px',
+                padding: 'var(--space-2)',
+                border: '1px solid var(--gray-300)',
+                borderRadius: 'var(--radius-md)',
+                outline: 'none',
+              }}
             />
           </div>
           
-          <div className="flex items-center space-x-2">
+          <div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+              style={{
+                padding: 'var(--space-2) var(--space-4)',
+                border: '1px solid var(--gray-300)',
+                borderRadius: 'var(--radius-md)',
+                outline: 'none',
+              }}
             >
               {statusOptions.map(option => (
                 <option key={option.id} value={option.id}>{option.label}</option>
@@ -117,63 +149,73 @@ export default function AdminPromotions() {
       </div>
 
       {/* Coupons Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-6)' }}>
         {filteredCoupons.map((coupon) => (
-          <div key={coupon.code} className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="bg-gradient-to-r from-navy to-navy-light p-4">
-              <div className="flex items-center justify-between">
-                <Tag className="w-8 h-8 text-gold" />
-                <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  coupon.is_active ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'
-                }`}>
+          <div key={coupon.code} style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
+            <div style={{ background: 'linear-gradient(to right, var(--navy), #1e3a5f)', padding: 'var(--space-4)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Tag size={32} style={{ color: 'var(--gold)' }} />
+                <span style={{
+                  padding: 'var(--space-1) var(--space-3)',
+                  fontSize: 'var(--text-xs)',
+                  fontWeight: 500,
+                  borderRadius: 'var(--radius-full)',
+                  backgroundColor: coupon.is_active ? '#22C55E' : '#6B7280',
+                  color: 'white',
+                }}>
                   {coupon.is_active ? 'Actif' : 'Inactif'}
                 </span>
               </div>
-              <div className="mt-4">
-                <p className="text-3xl font-bold text-white">{coupon.discount}%</p>
-                <p className="text-white/80 text-sm">de réduction</p>
+              <div style={{ marginTop: 'var(--space-4)' }}>
+                <p style={{ fontSize: 'var(--text-3xl)', fontWeight: 600, color: 'white' }}>{coupon.discount}%</p>
+                <p style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 'var(--text-sm)' }}>de réduction</p>
               </div>
             </div>
             
-            <div className="p-4 space-y-3">
+            <div style={{ padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               <div>
-                <p className="text-sm text-gray-500">Code</p>
-                <p className="font-mono font-bold text-lg text-gray-900">{coupon.code}</p>
+                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-500)' }}>Code</p>
+                <p style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 'var(--text-lg)', color: 'var(--navy)' }}>{coupon.code}</p>
               </div>
               
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Calendar className="w-4 h-4" />
-                <span>Achat min: {coupon.min_purchase.toLocaleString()} FCFA</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--text-sm)', color: 'var(--gray-600)' }}>
+                <Calendar size={16} />
+                <span>Achat min: {coupon.min_purchase?.toLocaleString() || '0'} FCFA</span>
               </div>
               
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Percent className="w-4 h-4" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--text-sm)', color: 'var(--gray-600)' }}>
+                <Percent size={16} />
                 <span>Utilisations: {coupon.uses_count || 0}</span>
               </div>
             </div>
             
-            <div className="px-4 pb-4 flex items-center space-x-2">
+            <div style={{ padding: '0 var(--space-4) var(--space-4)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
               <button
                 onClick={() => handleToggleStatus(coupon.code, coupon.is_active)}
-                className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
-                  coupon.is_active
-                    ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                    : 'bg-green-100 text-green-800 hover:bg-green-200'
-                }`}
+                style={{
+                  flex: 1,
+                  padding: 'var(--space-2)',
+                  borderRadius: 'var(--radius-md)',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  border: 'none',
+                  backgroundColor: coupon.is_active ? '#FEF3C7' : '#D1FAE5',
+                  color: coupon.is_active ? '#92400E' : '#065F46',
+                }}
               >
                 {coupon.is_active ? 'Désactiver' : 'Activer'}
               </button>
               <button
                 onClick={() => handleEdit(coupon)}
-                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                style={{ padding: 'var(--space-2)', color: '#2563EB', backgroundColor: 'transparent', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
               >
-                <Edit className="w-4 h-4" />
+                <Edit size={16} />
               </button>
               <button
                 onClick={() => handleDelete(coupon.code)}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                style={{ padding: 'var(--space-2)', color: '#DC2626', backgroundColor: 'transparent', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 size={16} />
               </button>
             </div>
           </div>
@@ -181,33 +223,57 @@ export default function AdminPromotions() {
       </div>
 
       {filteredCoupons.length === 0 && (
-        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-          <Tag className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-          <p className="text-gray-500">Aucun coupon trouvé</p>
+        <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-12)', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
+          <Tag size={64} style={{ margin: '0 auto var(--space-4)', color: 'var(--gray-300)' }} />
+          <p style={{ color: 'var(--gray-500)' }}>Aucun coupon trouvé</p>
         </div>
       )}
 
       {/* Modal for Add/Edit Coupon */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 'var(--space-4)',
+        }}>
+          <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-lg)', maxWidth: '448px', width: '100%' }}>
+            <div style={{ padding: 'var(--space-6)', borderBottom: '1px solid var(--gray-200)' }}>
+              <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 600, color: 'var(--navy)' }}>
                 {editingCoupon ? 'Modifier le coupon' : 'Ajouter un coupon'}
               </h2>
             </div>
-            <div className="p-6">
-              <p className="text-gray-600">Formulaire d'ajout/modification de coupon</p>
-              <p className="text-sm text-gray-400 mt-2">À implémenter avec tous les champs nécessaires</p>
+            <div style={{ padding: 'var(--space-6)' }}>
+              <p style={{ color: 'var(--gray-600)' }}>Formulaire d'ajout/modification de coupon</p>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', marginTop: 'var(--space-2)' }}>À implémenter avec tous les champs nécessaires</p>
             </div>
-            <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
+            <div style={{ padding: 'var(--space-6)', borderTop: '1px solid var(--gray-200)', display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-3)' }}>
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                style={{
+                  padding: 'var(--space-2) var(--space-4)',
+                  border: '1px solid var(--gray-300)',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'var(--gray-700)',
+                  cursor: 'pointer',
+                  backgroundColor: 'transparent',
+                }}
               >
                 Annuler
               </button>
-              <button className="px-4 py-2 bg-gold text-navy rounded-lg font-medium hover:bg-gold-light transition-colors">
+              <button style={{
+                padding: 'var(--space-2) var(--space-4)',
+                backgroundColor: 'var(--gold)',
+                color: 'var(--navy)',
+                borderRadius: 'var(--radius-md)',
+                fontWeight: 500,
+                cursor: 'pointer',
+                border: 'none',
+              }}>
                 {editingCoupon ? 'Enregistrer' : 'Ajouter'}
               </button>
             </div>
