@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Eye, Filter } from 'lucide-react';
+import { getProducts, deleteProduct } from '../../lib/api';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -7,19 +8,21 @@ export default function AdminProducts() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch products from API
     fetchProducts();
   }, []);
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/products');
-      const data = await response.json();
+      setLoading(true);
+      const data = await getProducts();
       setProducts(data);
     } catch (error) {
       console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,9 +44,7 @@ export default function AdminProducts() {
   const handleDelete = async (productId) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
       try {
-        await fetch(`http://localhost:3001/api/products/${productId}`, {
-          method: 'DELETE',
-        });
+        await deleteProduct(productId);
         fetchProducts();
       } catch (error) {
         console.error('Error deleting product:', error);
@@ -61,42 +62,77 @@ export default function AdminProducts() {
     setShowModal(true);
   };
 
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <p style={{ color: 'var(--gray-500)' }}>Chargement...</p>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-8)' }}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Produits</h1>
-          <p className="mt-2 text-gray-600">Gérer votre catalogue de produits</p>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-3xl)', fontWeight: 600, color: 'var(--navy)' }}>
+            Produits
+          </h1>
+          <p style={{ marginTop: 'var(--space-2)', color: 'var(--gray-500)' }}>Gérer votre catalogue de produits</p>
         </div>
         <button
           onClick={handleAdd}
-          className="flex items-center space-x-2 px-4 py-2 bg-gold text-navy rounded-lg font-medium hover:bg-gold-light transition-colors"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-2)',
+            padding: 'var(--space-2) var(--space-4)',
+            backgroundColor: 'var(--gold)',
+            color: 'var(--navy)',
+            borderRadius: 'var(--radius-lg)',
+            fontWeight: 500,
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all var(--transition-base)',
+          }}
         >
-          <Plus className="w-5 h-5" />
+          <Plus size={20} />
           <span>Ajouter un produit</span>
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+      <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-6)', marginBottom: 'var(--space-6)', boxShadow: 'var(--shadow-sm)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-400)' }} size={20} />
             <input
               type="text"
               placeholder="Rechercher un produit..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+              style={{
+                width: '100%',
+                paddingLeft: '40px',
+                paddingRight: '16px',
+                padding: 'var(--space-2)',
+                border: '1px solid var(--gray-300)',
+                borderRadius: 'var(--radius-md)',
+                outline: 'none',
+              }}
             />
           </div>
           
-          <div className="flex items-center space-x-2">
-            <Filter className="text-gray-400 w-5 h-5" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <Filter style={{ color: 'var(--gray-400)' }} size={20} />
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+              style={{
+                padding: 'var(--space-2) var(--space-4)',
+                border: '1px solid var(--gray-300)',
+                borderRadius: 'var(--radius-md)',
+                outline: 'none',
+              }}
             >
               {categories.map(cat => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -107,99 +143,107 @@ export default function AdminProducts() {
       </div>
 
       {/* Products Table */}
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+      <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead style={{ backgroundColor: 'var(--gray-100)' }}>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Produit
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Catégorie
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Prix
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Stock
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Statut
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'right', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody style={{ borderBottom: '1px solid var(--gray-200)' }}>
               {filteredProducts.map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-200">
+                <tr key={product.id} style={{ borderBottom: '1px solid var(--gray-200)' }}>
+                  <td style={{ padding: 'var(--space-3) var(--space-6)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 'var(--radius-md)', overflow: 'hidden', backgroundColor: 'var(--gray-200)' }}>
                         {product.images && product.images[0] ? (
                           <img
                             src={product.images[0]}
                             alt={product.name}
-                            className="w-full h-full object-cover"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            <Filter className="w-6 h-6" />
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gray-400)' }}>
+                            <Filter size={24} />
                           </div>
                         )}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">{product.name}</p>
-                        <p className="text-sm text-gray-500">{product.id}</p>
+                        <p style={{ fontWeight: 500, color: 'var(--navy)' }}>{product.name}</p>
+                        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-500)' }}>{product.id}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-600 capitalize">
+                  <td style={{ padding: 'var(--space-3) var(--space-6)', color: 'var(--gray-600)', textTransform: 'capitalize' }}>
                     {product.category}
                   </td>
-                  <td className="px-6 py-4 text-gray-900">
-                    {product.price.toLocaleString()} FCFA
+                  <td style={{ padding: 'var(--space-3) var(--space-6)', color: 'var(--navy)' }}>
+                    {product.price?.toLocaleString() || 0} FCFA
                     {product.discount > 0 && (
-                      <span className="ml-2 text-sm text-green-600">-{product.discount}%</span>
+                      <span style={{ marginLeft: 'var(--space-2)', fontSize: 'var(--text-sm)', color: 'var(--success)' }}>-{product.discount}%</span>
                     )}
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-sm font-medium rounded-full ${
-                      product.stock > 10 ? 'bg-green-100 text-green-800' :
-                      product.stock > 0 ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
+                  <td style={{ padding: 'var(--space-3) var(--space-6)' }}>
+                    <span style={{
+                      padding: 'var(--space-1) var(--space-2)',
+                      fontSize: 'var(--text-sm)',
+                      fontWeight: 500,
+                      borderRadius: 'var(--radius-full)',
+                      backgroundColor: (product.stock || 0) > 10 ? 'var(--success)' : (product.stock || 0) > 0 ? 'var(--warning)' : 'var(--error)',
+                      color: 'white'
+                    }}>
                       {product.stock || 0}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-sm font-medium rounded-full ${
-                      product.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {product.stock > 0 ? 'Actif' : 'Rupture'}
+                  <td style={{ padding: 'var(--space-3) var(--space-6)' }}>
+                    <span style={{
+                      padding: 'var(--space-1) var(--space-2)',
+                      fontSize: 'var(--text-sm)',
+                      fontWeight: 500,
+                      borderRadius: 'var(--radius-full)',
+                      backgroundColor: (product.stock || 0) > 0 ? 'var(--success)' : 'var(--error)',
+                      color: 'white'
+                    }}>
+                      {(product.stock || 0) > 0 ? 'Actif' : 'Rupture'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end space-x-2">
+                  <td style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'right' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
                       <button
-                        onClick={() => {/* Navigate to product detail */}}
-                        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                        onClick={() => {}}
+                        style={{ padding: 'var(--space-2)', color: 'var(--gray-600)', backgroundColor: 'transparent', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye size={16} />
                       </button>
                       <button
                         onClick={() => handleEdit(product)}
-                        className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                        style={{ padding: 'var(--space-2)', color: '#3b82f6', backgroundColor: 'transparent', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
                       >
-                        <Edit className="w-4 h-4" />
+                        <Edit size={16} />
                       </button>
                       <button
                         onClick={() => handleDelete(product.id)}
-                        className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
+                        style={{ padding: 'var(--space-2)', color: 'var(--error)', backgroundColor: 'transparent', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -210,34 +254,34 @@ export default function AdminProducts() {
         </div>
 
         {filteredProducts.length === 0 && (
-          <div className="text-center py-12">
-            <Filter className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-            <p className="text-gray-500">Aucun produit trouvé</p>
+          <div style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
+            <Filter size={64} style={{ margin: '0 auto var(--space-4)', color: 'var(--gray-300)' }} />
+            <p style={{ color: 'var(--gray-500)' }}>Aucun produit trouvé</p>
           </div>
         )}
       </div>
 
       {/* Modal for Add/Edit Product */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-4)' }}>
+          <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-lg)', maxWidth: '768px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ padding: 'var(--space-6)', borderBottom: '1px solid var(--gray-200)' }}>
+              <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 600, color: 'var(--navy)' }}>
                 {editingProduct ? 'Modifier le produit' : 'Ajouter un produit'}
               </h2>
             </div>
-            <div className="p-6">
-              <p className="text-gray-600">Formulaire d'ajout/modification de produit</p>
-              <p className="text-sm text-gray-400 mt-2">À implémenter avec tous les champs nécessaires</p>
+            <div style={{ padding: 'var(--space-6)' }}>
+              <p style={{ color: 'var(--gray-500)' }}>Formulaire d'ajout/modification de produit</p>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-400)', marginTop: 'var(--space-2)' }}>À implémenter avec tous les champs nécessaires</p>
             </div>
-            <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
+            <div style={{ padding: 'var(--space-6)', borderTop: '1px solid var(--gray-200)', display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-3)' }}>
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                style={{ padding: 'var(--space-2) var(--space-4)', border: '1px solid var(--gray-300)', borderRadius: 'var(--radius-md)', backgroundColor: 'transparent', color: 'var(--gray-600)', cursor: 'pointer' }}
               >
                 Annuler
               </button>
-              <button className="px-4 py-2 bg-gold text-navy rounded-lg font-medium hover:bg-gold-light transition-colors">
+              <button style={{ padding: 'var(--space-2) var(--space-4)', backgroundColor: 'var(--gold)', color: 'var(--navy)', borderRadius: 'var(--radius-md)', fontWeight: 500, border: 'none', cursor: 'pointer' }}>
                 {editingProduct ? 'Enregistrer' : 'Ajouter'}
               </button>
             </div>
