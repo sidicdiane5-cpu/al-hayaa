@@ -428,13 +428,33 @@ export async function createReview({ userId, productId, rating, comment }) {
   return mapReview(data);
 }
 
-export async function setReviewStatus(reviewId, status) {
+export async function updateReviewStatus(reviewId, status) {
   const { error } = await supabase.from('reviews').update({ status }).eq('id', reviewId);
   if (error) throw new Error(error.message);
 }
 
 export async function deleteReview(reviewId) {
   const { error } = await supabase.from('reviews').delete().eq('id', reviewId);
+  if (error) throw new Error(error.message);
+}
+
+// ── COUPONS ───────────────────────────────────────────────────
+export async function getCoupons() {
+  const { data, error } = await supabase
+    .from('coupons')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function updateCouponStatus(couponId, isActive) {
+  const { error } = await supabase.from('coupons').update({ is_active: isActive }).eq('code', couponId);
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteCoupon(couponId) {
+  const { error } = await supabase.from('coupons').delete().eq('code', couponId);
   if (error) throw new Error(error.message);
 }
 
