@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
+import { getProducts, getOrders, getCustomers } from '../../lib/api';
 import { 
   Package, 
   ShoppingCart, 
@@ -23,26 +24,41 @@ export default function AdminDashboard() {
   });
 
   const [recentOrders, setRecentOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulated data - In production, fetch from API
-    setStats({
-      totalOrders: 156,
-      totalRevenue: 45890,
-      totalProducts: 234,
-      totalCustomers: 89,
-      pendingOrders: 12,
-      lowStock: 5
-    });
-
-    setRecentOrders([
-      { id: 'ORD-001', customer: 'Jean Dupont', total: 12500, status: 'pending', date: '2024-01-15' },
-      { id: 'ORD-002', customer: 'Marie Martin', total: 8900, status: 'confirmed', date: '2024-01-15' },
-      { id: 'ORD-003', customer: 'Pierre Bernard', total: 15600, status: 'shipped', date: '2024-01-14' },
-      { id: 'ORD-004', customer: 'Sophie Petit', total: 5200, status: 'delivered', date: '2024-01-14' },
-      { id: 'ORD-005', customer: 'Lucas Dubois', total: 9800, status: 'pending', date: '2024-01-13' },
-    ]);
+    fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [products, orders, customers] = await Promise.all([
+        getProducts(),
+        getOrders(),
+        getCustomers()
+      ]);
+
+      const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+      const pendingOrders = orders.filter(o => o.status === 'pending').length;
+      const lowStock = products.filter(p => (p.stock || 0) < 5).length;
+
+      setStats({
+        totalOrders: orders.length,
+        totalRevenue,
+        totalProducts: products.length,
+        totalCustomers: customers.length,
+        pendingOrders,
+        lowStock
+      });
+
+      setRecentOrders(orders.slice(0, 5));
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const statCards = [
     {
@@ -100,6 +116,14 @@ export default function AdminDashboard() {
       default: return status;
     }
   };
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <p style={{ color: 'var(--gray-500)' }}>Chargement...</p>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.dashboard}>
@@ -198,27 +222,33 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {recentOrders.map((order) => (
+              {recentOrders.length > 0 ? recentOrders.map((order) => (
                 <tr key={order.id}>
                   <td>
                     <span>{order.id}</span>
                   </td>
                   <td>
-                    {order.customer}
+                    {order.user_name || order.user_id}
                   </td>
                   <td>
-                    {order.total.toLocaleString()} FCFA
+                    {(order.total || 0).toLocaleString()} FCFA
                   </td>
                   <td>
-                    <span className={`${styles.statusBadge} ${styles[order.status]}`}>
+                    <span className={`${styles.statusBadge} ${styles[order.status] || styles.pending}`}>
                       {getStatusLabel(order.status)}
                     </span>
                   </td>
                   <td>
-                    {order.date}
+                    {new Date(order.created_at).toLocaleDateString('fr-FR')}
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: 'var(--space-8)', color: 'var(--gray-500)' }}>
+                    Aucune commande récente
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
