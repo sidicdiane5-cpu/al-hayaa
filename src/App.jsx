@@ -78,7 +78,13 @@ const ProtectedAdminRoute = ({ children }) => {
     return <Navigate to="/admin" replace />;
   }
 
+  // Debug logging
+  console.log('[ProtectedAdminRoute] User:', user);
+  console.log('[ProtectedAdminRoute] User role:', user?.role);
+  console.log('[ProtectedAdminRoute] Is admin/manager:', user?.role === 'admin' || user?.role === 'manager');
+
   if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
+    console.log('[ProtectedAdminRoute] Access denied - redirecting to /forbidden');
     return <Navigate to="/forbidden" replace />;
   }
 
