@@ -128,7 +128,12 @@ export default function Header() {
               {!isAuthenticated ? (
                 <Link to="/login" style={{ color: 'var(--gold)', fontWeight: 500 }}>Connexion</Link>
               ) : (
-                <Link to="/compte" style={{ color: 'var(--gold)', fontWeight: 500 }}>Mon compte</Link>
+                <>
+                  <Link to="/compte" style={{ color: 'var(--gold)', fontWeight: 500 }}>Mon compte</Link>
+                  {(user?.role === 'admin' || user?.role === 'manager') && (
+                    <Link to="/admin/dashboard" style={{ color: 'var(--gold)', fontWeight: 500 }}>Administration</Link>
+                  )}
+                </>
               )}
               <Link to="/faq">FAQ</Link>
             </div>
