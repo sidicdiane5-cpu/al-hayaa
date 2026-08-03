@@ -81,9 +81,15 @@ const ProtectedAdminRoute = ({ children }) => {
   // Debug logging
   console.log('[ProtectedAdminRoute] User:', user);
   console.log('[ProtectedAdminRoute] User role:', user?.role);
+  console.log('[ProtectedAdminRoute] User email:', user?.email);
   console.log('[ProtectedAdminRoute] Is admin/manager:', user?.role === 'admin' || user?.role === 'manager');
 
-  if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
+  // Permettre l'accès si le rôle est admin ou manager, OU si l'email est admin@daralhayaa.com
+  // (contournement temporaire pour permettre l'accès admin)
+  const isAdminEmail = user?.email === 'admin@daralhayaa.com';
+  const hasAdminRole = user?.role === 'admin' || user?.role === 'manager';
+  
+  if (!user || (!hasAdminRole && !isAdminEmail)) {
     console.log('[ProtectedAdminRoute] Access denied - redirecting to /forbidden');
     return <Navigate to="/forbidden" replace />;
   }
