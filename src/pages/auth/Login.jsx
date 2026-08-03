@@ -7,7 +7,7 @@ import styles from './Login.module.css';
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isLoading } = useAuthStore();
+  const { login, isLoading, user } = useAuthStore();
   
   const from = location.state?.from || '/';
   
@@ -32,7 +32,12 @@ export default function Login() {
     
     if (result.success) {
       toast.success('Connexion réussie !');
-      navigate(from);
+      // Rediriger les admins vers le dashboard admin
+      if (result.user?.role === 'admin' || result.user?.role === 'manager') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate(from);
+      }
     } else {
       toast.error(result.error || 'Erreur lors de la connexion');
     }
