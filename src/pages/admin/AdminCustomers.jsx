@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Search, Filter, Edit, Shield, Ban, Check, MoreVertical } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { getCustomers, setCustomerRole, setCustomerActive, deleteCustomer } from '../../lib/api';
 
 export default function AdminCustomers() {
-  const { token } = useAuthStore();
+  const { user: currentUser } = useAuthStore();
   const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchCustomers();
@@ -15,29 +17,25 @@ export default function AdminCustomers() {
 
   const fetchCustomers = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/admin/users', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
-      if (data.success) {
-        setCustomers(data.users);
-      }
+      setLoading(true);
+      const data = await getCustomers();
+      setCustomers(data);
     } catch (error) {
       console.error('Error fetching customers:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const filteredCustomers = customers.filter(customer => {
     const matchesSearch = 
-      customer.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || customer.role === roleFilter;
     const matchesStatus = statusFilter === 'all' || 
-      (statusFilter === 'active' && customer.isActive) ||
-      (statusFilter === 'inactive' && !customer.isActive);
+      (statusFilter === 'active' && customer.is_active) ||
+      (statusFilter === 'inactive' && !customer.is_active);
     return matchesSearch && matchesRole && matchesStatus;
   });
 
@@ -56,14 +54,7 @@ export default function AdminCustomers() {
 
   const handleToggleStatus = async (customerId, currentStatus) => {
     try {
-      await fetch(`http://localhost:3001/api/admin/users/${customerId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ isActive: !currentStatus }),
-      });
+      await setCustomerActive(customerId, !currentStatus);
       fetchCustomers();
     } catch (error) {
       console.error('Error toggling user status:', error);
@@ -72,14 +63,7 @@ export default function AdminCustomers() {
 
   const handleChangeRole = async (customerId, newRole) => {
     try {
-      await fetch(`http://localhost:3001/api/admin/users/${customerId}/role`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ role: newRole }),
-      });
+      await setCustomerRole(customerId, newRole);
       fetchCustomers();
     } catch (error) {
       console.error('Error changing user role:', error);
@@ -89,12 +73,7 @@ export default function AdminCustomers() {
   const handleDelete = async (customerId) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
       try {
-        await fetch(`http://localhost:3001/api/admin/users/${customerId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        await deleteCustomer(customerId);
         fetchCustomers();
       } catch (error) {
         console.error('Error deleting user:', error);
@@ -102,33 +81,56 @@ export default function AdminCustomers() {
     }
   };
 
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <p style={{ color: 'var(--gray-500)' }}>Chargement...</p>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Clients</h1>
-        <p className="mt-2 text-gray-600">Gérer les utilisateurs et leurs rôles</p>
+      <div style={{ marginBottom: 'var(--space-8)' }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-3xl)', fontWeight: 600, color: 'var(--navy)' }}>
+          Clients
+        </h1>
+        <p style={{ marginTop: 'var(--space-2)', color: 'var(--gray-500)' }}>Gérer les utilisateurs et leurs rôles</p>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+      <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-6)', marginBottom: 'var(--space-6)', boxShadow: 'var(--shadow-sm)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-400)' }} size={20} />
             <input
               type="text"
               placeholder="Rechercher un client..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+              style={{
+                width: '100%',
+                paddingLeft: '40px',
+                paddingRight: '16px',
+                padding: 'var(--space-2)',
+                border: '1px solid var(--gray-300)',
+                borderRadius: 'var(--radius-md)',
+                outline: 'none',
+              }}
             />
           </div>
           
-          <div className="flex items-center space-x-2">
-            <Filter className="text-gray-400 w-5 h-5" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <Filter style={{ color: 'var(--gray-400)' }} size={20} />
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+              style={{
+                padding: 'var(--space-2) var(--space-4)',
+                border: '1px solid var(--gray-300)',
+                borderRadius: 'var(--radius-md)',
+                outline: 'none',
+              }}
             >
               {roleOptions.map(option => (
                 <option key={option.id} value={option.id}>{option.label}</option>
@@ -138,7 +140,12 @@ export default function AdminCustomers() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+              style={{
+                padding: 'var(--space-2) var(--space-4)',
+                border: '1px solid var(--gray-300)',
+                borderRadius: 'var(--radius-md)',
+                outline: 'none',
+              }}
             >
               {statusOptions.map(option => (
                 <option key={option.id} value={option.id}>{option.label}</option>
@@ -149,84 +156,107 @@ export default function AdminCustomers() {
       </div>
 
       {/* Customers Table */}
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+      <div style={{ backgroundColor: 'var(--white)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead style={{ backgroundColor: 'var(--gray-100)' }}>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Client
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Email
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Rôle
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Statut
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'left', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Inscrit le
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'right', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--gray-500)', textTransform: 'uppercase' }}>
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody style={{ borderBottom: '1px solid var(--gray-200)' }}>
               {filteredCustomers.map((customer) => (
-                <tr key={customer.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-navy flex items-center justify-center text-white font-bold">
-                        {customer.firstName?.[0] || customer.email?.[0]?.toUpperCase() || 'U'}
+                <tr key={customer.id} style={{ borderBottom: '1px solid var(--gray-200)' }}>
+                  <td style={{ padding: 'var(--space-3) var(--space-6)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                      <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: 'var(--navy)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600 }}>
+                        {customer.first_name?.[0] || customer.email?.[0]?.toUpperCase() || 'U'}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">
-                          {customer.firstName} {customer.lastName}
+                        <p style={{ fontWeight: 500, color: 'var(--navy)' }}>
+                          {customer.first_name} {customer.last_name}
                         </p>
-                        <p className="text-sm text-gray-500">{customer.phone || 'N/A'}</p>
+                        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-500)' }}>{customer.phone || 'N/A'}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-600">
+                  <td style={{ padding: 'var(--space-3) var(--space-6)', color: 'var(--gray-600)' }}>
                     {customer.email}
                   </td>
-                  <td className="px-6 py-4">
+                  <td style={{ padding: 'var(--space-3) var(--space-6)' }}>
                     <select
                       value={customer.role}
                       onChange={(e) => handleChangeRole(customer.id, e.target.value)}
-                      className="px-3 py-1 text-sm font-medium rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+                      disabled={customer.id === currentUser?.id}
+                      style={{
+                        padding: 'var(--space-1) var(--space-3)',
+                        fontSize: 'var(--text-sm)',
+                        fontWeight: 500,
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--gray-300)',
+                        outline: 'none',
+                        cursor: customer.id === currentUser?.id ? 'not-allowed' : 'pointer',
+                      }}
                     >
                       <option value="client">Client</option>
                       <option value="manager">Manager</option>
                       <option value="admin">Admin</option>
                     </select>
                   </td>
-                  <td className="px-6 py-4">
+                  <td style={{ padding: 'var(--space-3) var(--space-6)' }}>
                     <button
-                      onClick={() => handleToggleStatus(customer.id, customer.isActive)}
-                      className={`px-3 py-1 text-sm font-medium rounded-full ${
-                        customer.isActive
-                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                          : 'bg-red-100 text-red-800 hover:bg-red-200'
-                      }`}
+                      onClick={() => handleToggleStatus(customer.id, customer.is_active)}
+                      disabled={customer.id === currentUser?.id}
+                      style={{
+                        padding: 'var(--space-1) var(--space-3)',
+                        fontSize: 'var(--text-sm)',
+                        fontWeight: 500,
+                        borderRadius: 'var(--radius-full)',
+                        border: 'none',
+                        cursor: customer.id === currentUser?.id ? 'not-allowed' : 'pointer',
+                        backgroundColor: customer.is_active ? 'var(--success)' : 'var(--error)',
+                        color: 'white',
+                      }}
                     >
-                      {customer.isActive ? 'Actif' : 'Inactif'}
+                      {customer.is_active ? 'Actif' : 'Inactif'}
                     </button>
                   </td>
-                  <td className="px-6 py-4 text-gray-600">
-                    {new Date(customer.createdAt).toLocaleDateString('fr-FR')}
+                  <td style={{ padding: 'var(--space-3) var(--space-6)', color: 'var(--gray-600)' }}>
+                    {new Date(customer.created_at).toLocaleDateString('fr-FR')}
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end space-x-2">
+                  <td style={{ padding: 'var(--space-3) var(--space-6)', textAlign: 'right' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
                       <button
                         onClick={() => handleDelete(customer.id)}
-                        className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
+                        disabled={customer.id === currentUser?.id}
+                        style={{
+                          padding: 'var(--space-2)',
+                          color: 'var(--error)',
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          borderRadius: 'var(--radius-md)',
+                          cursor: customer.id === currentUser?.id ? 'not-allowed' : 'pointer',
+                        }}
                         title="Supprimer"
                       >
-                        <Ban className="w-4 h-4" />
+                        <Ban size={16} />
                       </button>
                     </div>
                   </td>
@@ -237,9 +267,9 @@ export default function AdminCustomers() {
         </div>
 
         {filteredCustomers.length === 0 && (
-          <div className="text-center py-12">
-            <Shield className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-            <p className="text-gray-500">Aucun client trouvé</p>
+          <div style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
+            <Shield size={64} style={{ margin: '0 auto var(--space-4)', color: 'var(--gray-300)' }} />
+            <p style={{ color: 'var(--gray-500)' }}>Aucun client trouvé</p>
           </div>
         )}
       </div>
