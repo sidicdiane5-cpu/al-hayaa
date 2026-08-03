@@ -20,7 +20,7 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, isAdmin } = useAuthStore();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true); // Sidebar ouvert par défaut
 
   // Contournement temporaire : permettre l'accès si l'email est admin@daralhayaa.com
   const isAdminEmail = user?.email === 'admin@daralhayaa.com';
@@ -47,10 +47,13 @@ export default function AdminLayout() {
     { id: 'settings', label: 'Paramètres', icon: Settings, path: '/admin/settings' },
   ];
 
+  // Détection mobile
+  const isMobile = window.innerWidth < 768;
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--gray-100)' }}>
       {/* Mobile sidebar backdrop */}
-      {sidebarOpen && (
+      {sidebarOpen && isMobile && (
         <div 
           style={{
             position: 'fixed',
@@ -72,7 +75,7 @@ export default function AdminLayout() {
         backgroundColor: 'var(--navy)',
         color: 'white',
         zIndex: 50,
-        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+        transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
         transition: 'transform var(--transition-base)',
         display: 'flex',
         flexDirection: 'column',
@@ -201,10 +204,10 @@ export default function AdminLayout() {
       {/* Main content */}
       <div style={{
         flex: 1,
-        marginLeft: 0,
+        marginLeft: isMobile ? 0 : '280px',
         display: 'flex',
         flexDirection: 'column',
-        width: '100%',
+        width: isMobile ? '100%' : 'calc(100% - 280px)',
       }}>
         {/* Top bar */}
         <header style={{
