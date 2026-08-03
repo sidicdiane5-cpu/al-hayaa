@@ -1,17 +1,12 @@
 -- Script pour créer l'utilisateur admin dans Supabase
 -- Exécutez ce script dans l'éditeur SQL de Supabase
 
--- 1. D'abord, créer l'utilisateur dans l'auth Supabase
--- Vous devez le faire manuellement via le dashboard Supabase :
--- - Allez dans Authentication > Users
--- - Cliquez sur "Add user"
--- - Email: admin@daralhayaa.com
--- - Mot de passe: admin123
--- - Cochez "Auto Confirm User"
--- - Cliquez sur "Create User"
+-- ÉTAPE 1 : Modifier la table users pour rendre password nullable
+-- (exécutez d'abord cette commande)
+ALTER TABLE users ALTER COLUMN password DROP NOT NULL;
 
--- 2. Ensuite, exécutez ce SQL pour créer le profil admin dans la table users
--- Remplacez 'USER_ID_FROM_AUTH' par l'ID de l'utilisateur créé dans l'étape 1
+-- ÉTAPE 2 : Créer l'utilisateur admin
+-- Remplacez 'USER_ID_FROM_AUTH' par l'UUID de l'utilisateur créé dans Authentication
 
 INSERT INTO users (
   id,
@@ -39,5 +34,5 @@ ON CONFLICT (id) DO UPDATE SET
   is_active = true,
   updated_at = NOW();
 
--- 3. Vérifier que l'utilisateur admin a été créé
+-- ÉTAPE 3 : Vérifier que l'utilisateur admin a été créé
 SELECT * FROM users WHERE email = 'admin@daralhayaa.com';

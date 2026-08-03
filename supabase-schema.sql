@@ -11,7 +11,7 @@ CREATE TABLE users (
     last_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     phone VARCHAR(20),
-    password TEXT NOT NULL,
+    password TEXT, -- Rendu nullable car Supabase Auth gère le mot de passe
     role VARCHAR(20) DEFAULT 'client' CHECK (role IN ('client', 'manager', 'admin')),
     is_active BOOLEAN DEFAULT false,
     email_verified BOOLEAN DEFAULT false,
