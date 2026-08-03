@@ -438,23 +438,8 @@ export async function deleteReview(reviewId) {
   if (error) throw new Error(error.message);
 }
 
-// ── COUPONS ───────────────────────────────────────────────────
-export async function getCoupons() {
-  const { data, error } = await supabase
-    .from('coupons')
-    .select('*')
-    .order('created_at', { ascending: false });
-  if (error) throw new Error(error.message);
-  return data;
-}
-
 export async function updateCouponStatus(couponId, isActive) {
   const { error } = await supabase.from('coupons').update({ is_active: isActive }).eq('code', couponId);
-  if (error) throw new Error(error.message);
-}
-
-export async function deleteCoupon(couponId) {
-  const { error } = await supabase.from('coupons').delete().eq('code', couponId);
   if (error) throw new Error(error.message);
 }
 
